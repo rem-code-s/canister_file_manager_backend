@@ -20,6 +20,13 @@ The repository for the file manager frontend can be found [here](https://github.
 
 For the purpose of this demo all files and directories have an `owner`, you can add and delete files and folders to the directories that you own. When adding files with an anonymous principal it is possible for other people to delete the files and / or directories.
 
+### local deployment
+
+- make sure you have [DFX installed](https://internetcomputer.org/docs/current/tutorials/deploy_sample_app/#dfx)
+- navigate to the backend folder with a CLI
+- run `dfx start --clean --background`
+- run `dfx deploy --no-wallet`
+
 ### future ideas
 
 - Move to stable storage(!)
