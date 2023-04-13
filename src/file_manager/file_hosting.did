@@ -1,0 +1,193 @@
+type Asset = variant { File : FileResponse; Directory : DirectoryResponse };
+type DirectoryEntity = record {
+  id : nat64;
+  permission : Permission;
+  updated_at : nat64;
+  owner : opt principal;
+  name : text;
+  created_at : nat64;
+  parent_id : opt nat64;
+  is_protected : bool;
+};
+type DirectoryResponse = record {
+  id : nat64;
+  permission : Permission;
+  updated_at : nat64;
+  owner : opt principal;
+  name : text;
+  created_at : nat64;
+  children : Vec;
+  parent_id : opt nat64;
+  is_protected : bool;
+};
+type FileResponse = record {
+  id : nat64;
+  permission : Permission;
+  updated_at : nat64;
+  owner : opt principal;
+  metadata : opt text;
+  name : text;
+  path : text;
+  size : nat64;
+  mime_type : text;
+  created_at : nat64;
+  parent_id : opt nat64;
+  chunks : vec nat64;
+  is_protected : bool;
+  extension : text;
+};
+type HttpRequest = record {
+  url : text;
+  method : text;
+  body : vec nat8;
+  headers : vec record { text; text };
+};
+type HttpResponse = record {
+  body : vec nat8;
+  headers : vec record { text; text };
+  streaming_strategy : opt StreamingStrategy;
+  status_code : nat16;
+};
+type Metadata = record {
+  version : text;
+  cycles : nat64;
+  stable_memory : nat64;
+  heap_memory : nat64;
+  directory_count : nat64;
+  file_count : nat64;
+  files_combined_bytes : nat64;
+};
+type NestedAssets = record { asset : PostAsset; children : Vec_1 };
+type Permission = variant { Private; Origin : vec text; Public };
+type PostAsset = variant { File : PostFile; None; Directory : PostDirectory };
+type PostDirectory = record {
+  permission : Permission;
+  name : text;
+  children : vec Asset;
+  parent_id : opt nat64;
+};
+type PostFile = record {
+  permission : Permission;
+  origin_path : text;
+  metadata : opt text;
+  name : text;
+  size : nat64;
+  mime_type : text;
+  parent_id : opt nat64;
+  chunk_count : nat64;
+  extension : text;
+};
+type Result = variant {
+  Ok : vec record { FileResponse; text };
+  Err : record { vec Asset; text };
+};
+type Result_1 = variant { Ok : DirectoryEntity; Err : text };
+type Result_2 = variant { Ok; Err : text };
+type StreamingCallbackHttpResponse = record {
+  token : opt StreamingCallbackToken;
+  body : vec nat8;
+};
+type StreamingCallbackToken = record {
+  chunk_index : nat64;
+  headers : vec record { text; text };
+  file_id : nat64;
+};
+type StreamingStrategy = variant {
+  Callback : record {
+    token : StreamingCallbackToken;
+    callback : func () -> ();
+  };
+};
+type Vec = vec variant {
+  File : record {
+    id : nat64;
+    permission : variant { Private; Origin : vec text; Public };
+    updated_at : nat64;
+    owner : opt principal;
+    metadata : opt text;
+    name : text;
+    path : text;
+    size : nat64;
+    mime_type : text;
+    created_at : nat64;
+    parent_id : opt nat64;
+    chunks : vec nat64;
+    is_protected : bool;
+    extension : text;
+  };
+  Directory : record {
+    id : nat64;
+    permission : variant { Private; Origin : vec text; Public };
+    updated_at : nat64;
+    owner : opt principal;
+    name : text;
+    created_at : nat64;
+    children : Vec;
+    parent_id : opt nat64;
+    is_protected : bool;
+  };
+};
+type Vec_1 = vec record {
+  asset : variant {
+    File : record {
+      permission : variant { Private; Origin : vec text; Public };
+      origin_path : text;
+      metadata : opt text;
+      name : text;
+      size : nat64;
+      mime_type : text;
+      parent_id : opt nat64;
+      chunk_count : nat64;
+      extension : text;
+    };
+    None;
+    Directory : record {
+      permission : variant { Private; Origin : vec text; Public };
+      name : text;
+      children : vec variant {
+        File : record {
+          id : nat64;
+          permission : variant { Private; Origin : vec text; Public };
+          updated_at : nat64;
+          owner : opt principal;
+          metadata : opt text;
+          name : text;
+          path : text;
+          size : nat64;
+          mime_type : text;
+          created_at : nat64;
+          parent_id : opt nat64;
+          chunks : vec nat64;
+          is_protected : bool;
+          extension : text;
+        };
+        Directory : record {
+          id : nat64;
+          permission : variant { Private; Origin : vec text; Public };
+          updated_at : nat64;
+          owner : opt principal;
+          name : text;
+          created_at : nat64;
+          children : Vec;
+          parent_id : opt nat64;
+          is_protected : bool;
+        };
+      };
+      parent_id : opt nat64;
+    };
+  };
+  children : Vec_1;
+};
+service : {
+  add_assets : (opt nat64, vec NestedAssets) -> (Result);
+  add_chunks : (vec record { nat64; vec nat8 }) -> ();
+  create_directory : (text, Permission, opt nat64) -> (Result_1);
+  delete_directory : (nat64) -> (Result_2);
+  delete_file : (nat64) -> (Result_2);
+  get_assets_tree : (opt nat64) -> (vec Asset) query;
+  get_metadata : () -> (Metadata) query;
+  http_request : (HttpRequest) -> (HttpResponse) query;
+  http_request_streaming_callback : (StreamingCallbackToken) -> (
+      StreamingCallbackHttpResponse,
+    ) query;
+}

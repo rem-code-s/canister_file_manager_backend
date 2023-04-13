@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "canisters": {
+    "file_manager": {
+      "type": "rust",
+      "package": "file_manager",
+      "candid": "src/file_manager/file_manager.did"
+    }
+  },
+  "defaults": {
+    "build": {
+      "packtool": "",
+      "args": ""
+    }
+  },
+  "output_env_file": ".env"
+}
