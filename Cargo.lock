@@ -360,7 +360,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "file_hosting"
+name = "file_manager"
 version = "0.1.0"
 dependencies = [
  "candid",

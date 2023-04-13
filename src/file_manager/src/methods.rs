@@ -60,22 +60,6 @@ fn add_assets(
     Store::add_assets(parent_id, assets)
 }
 
-// Temporary method to add protected assets by a single principal
-// #[update]
-// #[candid_method(update)]
-// fn add_protected_assets(
-//     parent_id: Option<Id>,
-//     assets: Vec<NestedAssets>,
-// ) -> Result<Vec<(FileResponse, String)>, (Vec<Asset>, String)> {
-//     let principal =
-//         Principal::from_text("ve3v4-o7xuv-ijejl-vcyfx-hjy3b-owwtx-jte2k-2bciw-spskd-jgmvd-rqe");
-//     if caller() == principal.unwrap() {
-//         return Store::add_protected_assets(parent_id, assets);
-//     } else {
-//         return Err((vec![], "Unauthorized".to_string()));
-//     }
-// }
-
 #[update]
 #[candid_method(update)]
 fn add_chunks(data: Vec<(Id, Vec<u8>)>) {
@@ -140,17 +124,3 @@ fn http_request_streaming_callback(data: StreamingCallbackToken) -> StreamingCal
         }
     })
 }
-
-// #[update]
-// #[candid_method(update)]
-// fn add_assets(assets: Vec<PostAsset>) {
-//     Store::add_empty_assets(assets);
-// }
-
-// #[update]
-// #[candid_method(update)]
-// fn add_directories(parent_id: Option<u64>, directories: Vec<NestedDirectories>) {
-//     STORE.with(|store| {
-//         Store::add_directories_recursive(parent_id, directories, &mut store.borrow_mut())
-//     });
-// }
