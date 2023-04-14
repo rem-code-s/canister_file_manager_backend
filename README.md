@@ -41,4 +41,4 @@ making this canister user controlled can be done by using the `owner` or introdu
 
 ### know issues
 
-- Specific access control (permissions) does not work, (making files available from `https://canister-id.raw.ic0.app` but but not from `https://canister-id.raw.ic0.app/image1.png` when `Permission::Private` is specified). The ideal approach would be to use http headers to control this. If this does not work it would be possible to throw a `404` when visiting the url directly and fetching the chunks manually on the frontend to create the file. (`http_methods.rs:150`)
+- Specific access control (permissions) does not work, (making files available from `https://canister-id.raw.ic0.app` but but not from `https://canister-id.raw.ic0.app/image1.png` when `Permission::Private` is specified). The ideal approach would be to use http headers to control this but [this does not seem to work](https://forum.dfinity.org/t/setting-access-control-allow-origin-header-does-not-work/19428). An other way would be to throw a `404` when visiting the url directly and add methods for fetching the chunks manually and create the file on the frontend. (`http_methods.rs:150`)
