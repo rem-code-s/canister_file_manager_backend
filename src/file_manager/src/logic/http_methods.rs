@@ -145,7 +145,6 @@ impl Store {
                     HeaderField("content-type".to_string(), _file.mime_type.to_string()),
                     HeaderField("accept-ranges".to_string(), "bytes".to_string()),
                     HeaderField("content-length".to_string(), _file.size.to_string()),
-                    // HeaderField("david".to_string(), "does_it_work".to_string()),
                     // HeaderField(
                     //     "access-control-allow-origin".to_string(),
                     //     format!("https://{}.raw.ic0.app", id().to_string()),
