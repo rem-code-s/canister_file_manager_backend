@@ -20,6 +20,8 @@ The repository for the file manager frontend can be found [here](https://github.
 
 For the purpose of this demo all files and directories have an `owner`, you can add and delete files and folders to the directories that you own. When adding files with an anonymous principal it is possible for other people to delete the files and / or directories.
 
+making this canister user controlled can be done by using the `owner` or introducing a `whitelist` to authenticate calls.
+
 ### local deployment
 
 - make sure you have [DFX installed](https://internetcomputer.org/docs/current/tutorials/deploy_sample_app/#dfx)
@@ -36,3 +38,7 @@ For the purpose of this demo all files and directories have an `owner`, you can 
 - add optional default index page where files and directories are displayed when visiting a directory as with default (unsecured) webservers
 - combine `get_file_by_path` and `get_file_path` methods
 - overal code cleanup
+
+### know issues
+
+- Specific access control (permissions) does not work, (making files available from `https://canister-id.raw.ic0.app` but but not from `https://canister-id.raw.ic0.app/image1.png` when `Permission::Private` is specified). The ideal approach would be to use http headers to control this. If this does not work it would be possible to throw a `404` when visiting the url directly and fetching the chunks manually on the frontend to create the file. (`http_methods.rs:150`)

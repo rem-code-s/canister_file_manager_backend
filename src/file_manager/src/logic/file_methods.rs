@@ -1,7 +1,7 @@
-use ic_cdk::caller;
+use ic_cdk::{api::time, caller};
 
 use crate::{
-    models::asset_models::{FileEntity, FileResponse, Id},
+    models::asset_models::{FileEntity, FileResponse, Id, Permission},
     store::{Store, STORE},
 };
 
@@ -31,6 +31,26 @@ impl Store {
             store.files.remove(&file_id);
         }
         Ok(())
+    }
+
+    pub fn change_file_permission(file_id: Id, permission: Permission) -> Result<(), String> {
+        STORE.with(|store| {
+            let mut store = store.borrow_mut();
+            let file = store.files.get_mut(&file_id);
+            if let Some(_file) = file {
+                if _file.is_protected {
+                    return Err("Directory is protected".to_string());
+                }
+
+                if _file.owner != Some(caller()) {
+                    return Err("Directory is not owned by you".to_string());
+                }
+
+                _file.permission = permission;
+                _file.updated_at = time();
+            }
+            Ok(())
+        })
     }
 
     pub fn add_chunks(chunks: Vec<(Id, Vec<u8>)>) {

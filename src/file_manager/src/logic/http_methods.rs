@@ -147,6 +147,33 @@ impl Store {
                     HeaderField("content-length".to_string(), _file.size.to_string()),
                 ];
 
+                // testing access control (does not work)
+                // match _file.permission {
+                //     Permission::Public => {
+                //         headers.push(HeaderField(
+                //             "access-control-allow-origin".to_string(),
+                //             format!("https://{}.raw.ic0.app", id().to_string()),
+                //         ));
+                //     }
+                //     Permission::Private => {
+                //         // add referrer policy when permission is private
+                //         // this should make the file only accessible from the same origin
+                //         // but not when directly accessing the file
+                //         headers.push(HeaderField(
+                //             "referrer-policy".to_string(),
+                //             "same-origin".to_string(),
+                //         ));
+                //     }
+                //     Permission::Origin(origins) => {
+                //         // add access control allow origin header
+                //         // this should make the file only accessible from the specified origins
+                //         headers.push(HeaderField(
+                //             "access-control-allow-origin".to_string(),
+                //             origins.join(", "),
+                //         ));
+                //     }
+                // }
+
                 let encoding = AssetEncoding {
                     content_chunks: _file.chunks.clone(),
                     total_length: _file.size as u128,

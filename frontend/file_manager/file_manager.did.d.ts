@@ -87,9 +87,9 @@ export interface PostFile {
 }
 export type Result = { 'Ok' : Array<[FileResponse, string]> } |
   { 'Err' : [Array<Asset>, string] };
-export type Result_1 = { 'Ok' : DirectoryEntity } |
+export type Result_1 = { 'Ok' : null } |
   { 'Err' : string };
-export type Result_2 = { 'Ok' : null } |
+export type Result_2 = { 'Ok' : DirectoryEntity } |
   { 'Err' : string };
 export interface StreamingCallbackHttpResponse {
   'token' : [] | [StreamingCallbackToken],
@@ -216,12 +216,14 @@ export interface _SERVICE {
     [Array<[bigint, Uint8Array | number[]]>],
     undefined
   >,
+  'change_directory_permission' : ActorMethod<[bigint, Permission], Result_1>,
+  'change_file_permission' : ActorMethod<[bigint, Permission], Result_1>,
   'create_directory' : ActorMethod<
     [string, Permission, [] | [bigint]],
-    Result_1
+    Result_2
   >,
-  'delete_directory' : ActorMethod<[bigint], Result_2>,
-  'delete_file' : ActorMethod<[bigint], Result_2>,
+  'delete_directory' : ActorMethod<[bigint], Result_1>,
+  'delete_file' : ActorMethod<[bigint], Result_1>,
   'get_assets_tree' : ActorMethod<[[] | [bigint]], Array<Asset>>,
   'get_metadata' : ActorMethod<[], Metadata>,
   'http_request' : ActorMethod<[HttpRequest], HttpResponse>,

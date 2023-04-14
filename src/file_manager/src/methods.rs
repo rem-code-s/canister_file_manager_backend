@@ -76,6 +76,18 @@ fn create_directory(
     Store::create_directory(name, permission, parent_id)
 }
 
+#[update]
+#[candid_method(update)]
+fn change_file_permission(file_id: Id, permission: Permission) -> Result<(), String> {
+    Store::change_file_permission(file_id, permission)
+}
+
+#[update]
+#[candid_method(update)]
+fn change_directory_permission(directory_id: Id, permission: Permission) -> Result<(), String> {
+    Store::change_directory_permission(directory_id, permission)
+}
+
 #[query]
 #[candid_method(query)]
 fn get_metadata() -> Metadata {

@@ -47,6 +47,29 @@ impl Store {
         })
     }
 
+    pub fn change_directory_permission(
+        directory_id: Id,
+        permission: Permission,
+    ) -> Result<(), String> {
+        STORE.with(|store| {
+            let mut store = store.borrow_mut();
+            let directory = store.directories.get_mut(&directory_id);
+            if let Some(_directory) = directory {
+                if _directory.is_protected {
+                    return Err("Directory is protected".to_string());
+                }
+
+                if _directory.owner != Some(caller()) {
+                    return Err("Directory is not owned by you".to_string());
+                }
+
+                _directory.permission = permission;
+                _directory.updated_at = time();
+            }
+            Ok(())
+        })
+    }
+
     pub fn delete_directory(directory_id: u64) -> Result<(), String> {
         STORE.with(|store| {
             let mut store = store.borrow_mut();
