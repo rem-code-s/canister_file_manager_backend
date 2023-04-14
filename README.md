@@ -6,7 +6,7 @@
 
 ##
 
-# File manager canister backend
+# Canister file manager backend
 
 The code in this repository allows you to spin up a canister on the [internet computer](https://internetcomputer.org) that handles file storage and serving over https.
 
