@@ -178,7 +178,11 @@ export const idlFactory = ({ IDL }) => {
     'Ok' : IDL.Vec(IDL.Tuple(FileResponse, IDL.Text)),
     'Err' : IDL.Tuple(IDL.Vec(Asset), IDL.Text),
   });
-  const Result_1 = IDL.Variant({ 'Ok' : IDL.Null, 'Err' : IDL.Text });
+  const AssetWithId = IDL.Variant({
+    'File' : IDL.Nat64,
+    'Directory' : IDL.Nat64,
+  });
+  const Result_1 = IDL.Variant({ 'Ok' : Asset, 'Err' : IDL.Text });
   const DirectoryEntity = IDL.Record({
     'id' : IDL.Nat64,
     'permission' : Permission,
@@ -190,6 +194,7 @@ export const idlFactory = ({ IDL }) => {
     'is_protected' : IDL.Bool,
   });
   const Result_2 = IDL.Variant({ 'Ok' : DirectoryEntity, 'Err' : IDL.Text });
+  const Result_3 = IDL.Variant({ 'Ok' : IDL.Null, 'Err' : IDL.Text });
   const Metadata = IDL.Record({
     'version' : IDL.Text,
     'cycles' : IDL.Nat64,
@@ -237,13 +242,19 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
-    'change_directory_permission' : IDL.Func(
-        [IDL.Nat64, Permission],
+    'change_asset_name' : IDL.Func([IDL.Text, AssetWithId], [Result_1], []),
+    'change_asset_owner' : IDL.Func(
+        [IDL.Principal, AssetWithId],
         [Result_1],
         [],
       ),
-    'change_file_permission' : IDL.Func(
-        [IDL.Nat64, Permission],
+    'change_asset_parent' : IDL.Func(
+        [IDL.Opt(IDL.Nat64), AssetWithId],
+        [Result_1],
+        [],
+      ),
+    'change_asset_permission' : IDL.Func(
+        [Permission, AssetWithId],
         [Result_1],
         [],
       ),
@@ -252,10 +263,9 @@ export const idlFactory = ({ IDL }) => {
         [Result_2],
         [],
       ),
-    'delete_directory' : IDL.Func([IDL.Nat64], [Result_1], []),
-    'delete_file' : IDL.Func([IDL.Nat64], [Result_1], []),
+    'delete_asset' : IDL.Func([AssetWithId], [Result_3], []),
     'get_assets_tree' : IDL.Func(
-        [IDL.Opt(IDL.Nat64)],
+        [IDL.Opt(IDL.Nat64), IDL.Bool],
         [IDL.Vec(Asset)],
         ['query'],
       ),

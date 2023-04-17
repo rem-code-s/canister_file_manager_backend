@@ -2,8 +2,8 @@ use ic_cdk::id;
 
 use crate::{
     helpers::ic_data_helper,
-    models::asset_models::FileEntity,
     models::{
+        file_models::FileEntity,
         http_models::{
             AssetEncoding, HeaderField, HttpRequest, HttpResponse, PathEntry,
             StreamingCallbackToken, StreamingStrategy,
@@ -22,8 +22,8 @@ impl Store {
         path = path.iter().filter(|p| !p.is_empty()).cloned().collect();
 
         // Create a permission denied response
-        let permission_denied = HttpResponse {
-            status_code: 403,
+        let not_found = HttpResponse {
+            status_code: 404,
             headers: vec![],
             body: vec![],
             streaming_strategy: None,
@@ -32,11 +32,11 @@ impl Store {
         // Create a path entry to serve content by
         let mut asset_paths = vec![PathEntry {
             // Segments to match the path against
-            match_path: vec!["dirs".to_string()],
+            match_path: vec!["directories".to_string()],
             response: HttpResponse {
                 status_code: 200,
                 headers: vec![],
-                body: serde_json::to_string(&Self::get_assets_tree(None))
+                body: serde_json::to_string(&Self::get_assets_tree(None, None))
                     .unwrap()
                     .as_bytes()
                     .to_vec(),
@@ -59,11 +59,11 @@ impl Store {
             "GET" => {
                 let response = asset_paths.iter().find(|a| a.match_path == path);
                 match response.cloned() {
-                    None => permission_denied,
+                    None => not_found,
                     Some(_response) => _response.response,
                 }
             }
-            _ => permission_denied,
+            _ => not_found,
         }
     }
 
@@ -107,11 +107,11 @@ impl Store {
         if path.len() == 0 {
             file = Self::find_file(None, "index.html".to_string());
         } else {
-            match Self::find_dir(None, path[0].to_string()) {
+            match Self::find_directory(None, path[0].to_string()) {
                 Some(_directory) => {
                     let mut directory = _directory;
                     for section in path.iter().skip(1) {
-                        match Self::find_dir(Some(directory.id), section.to_string()) {
+                        match Self::find_directory(Some(directory.id), section.to_string()) {
                             Some(_directory) => {
                                 directory = _directory;
                             }

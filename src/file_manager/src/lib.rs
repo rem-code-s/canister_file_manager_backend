@@ -1,5 +1,7 @@
 pub mod models {
     pub mod asset_models;
+    pub mod directory_models;
+    pub mod file_models;
     pub mod http_models;
     pub mod misc_models;
 }

@@ -1,10 +1,12 @@
-use candid::candid_method;
-use ic_cdk::{post_upgrade, pre_upgrade, query, storage, update};
+use candid::{candid_method, Principal};
+use ic_cdk::{caller, post_upgrade, pre_upgrade, query, storage, update};
 
 use crate::{
     models::asset_models::{Asset, Id, NestedAssets},
     models::{
-        asset_models::{DirectoryEntity, FileResponse, Permission},
+        asset_models::{AssetWithId, Permission},
+        directory_models::DirectoryEntity,
+        file_models::FileResponse,
         http_models::{
             AssetEncoding, HttpRequest, HttpResponse, StreamingCallbackHttpResponse,
             StreamingCallbackToken,
@@ -35,20 +37,8 @@ pub fn candid() {
 
 #[query]
 #[candid_method(query)]
-fn get_assets_tree(parent_id: Option<u64>) -> Vec<Asset> {
-    Store::get_assets_tree(parent_id)
-}
-
-#[update]
-#[candid_method(update)]
-fn delete_file(file_id: Id) -> Result<(), String> {
-    Store::delete_file(file_id)
-}
-
-#[update]
-#[candid_method(update)]
-fn delete_directory(directory_id: u64) -> Result<(), String> {
-    Store::delete_directory(directory_id)
+fn get_assets_tree(parent_id: Option<u64>, by_owner: bool) -> Vec<Asset> {
+    Store::get_assets_tree(parent_id, if by_owner { Some(caller()) } else { None })
 }
 
 #[update]
@@ -78,14 +68,33 @@ fn create_directory(
 
 #[update]
 #[candid_method(update)]
-fn change_file_permission(file_id: Id, permission: Permission) -> Result<(), String> {
-    Store::change_file_permission(file_id, permission)
+fn change_asset_name(name: String, asset: AssetWithId) -> Result<Asset, String> {
+    Store::change_asset_name(name, asset)
 }
 
 #[update]
 #[candid_method(update)]
-fn change_directory_permission(directory_id: Id, permission: Permission) -> Result<(), String> {
-    Store::change_directory_permission(directory_id, permission)
+fn change_asset_parent(parent_id: Option<Id>, asset: AssetWithId) -> Result<Asset, String> {
+    Store::change_asset_parent(parent_id, asset)
+}
+
+#[update]
+#[candid_method(update)]
+fn change_asset_owner(owner: Principal, asset: AssetWithId) -> Result<Asset, String> {
+    // Not implemented yet
+    Err("Not implemented yet".to_string())
+}
+
+#[update]
+#[candid_method(update)]
+fn change_asset_permission(permission: Permission, asset: AssetWithId) -> Result<Asset, String> {
+    Store::change_asset_permission(permission, asset)
+}
+
+#[update]
+#[candid_method(update)]
+fn delete_asset(asset: AssetWithId) -> Result<(), String> {
+    Store::delete_asset(asset)
 }
 
 #[query]

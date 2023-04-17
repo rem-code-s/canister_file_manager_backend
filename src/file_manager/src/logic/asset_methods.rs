@@ -1,9 +1,11 @@
+use candid::Principal;
 use ic_cdk::{api::time, caller};
 
 use crate::{
-    models::asset_models::{
-        Asset, DirectoryEntity, DirectoryResponse, FileEntity, FileResponse, Id, NestedAssets,
-        PostAsset,
+    models::{
+        asset_models::{Asset, AssetWithId, Id, NestedAssets, Permission, PostAsset},
+        directory_models::{DirectoryEntity, DirectoryResponse},
+        file_models::{FileEntity, FileResponse},
     },
     store::{Store, STORE},
 };
@@ -66,6 +68,7 @@ impl Store {
                         }
                     }
                 }
+
                 PostAsset::Directory(post_directory) => {
                     if let Some(existing_directory) =
                         store.directories.clone().values().find(|_exisiting| {
@@ -187,31 +190,45 @@ impl Store {
     }
 
     // Get all files and directories in a tree structure (parent -> children)
-    pub fn get_assets_tree(parent_id: Option<Id>) -> Vec<Asset> {
+    pub fn get_assets_tree(parent_id: Option<Id>, owner: Option<Principal>) -> Vec<Asset> {
         STORE.with(|store| {
             let store = store.borrow();
             // Get all directories filtered by parent_id (root is None)
             let mut directories: Vec<DirectoryResponse> = store
                 .directories
                 .values()
+                .filter(|_dir| {
+                    if let Some(owner) = owner {
+                        _dir.owner == Some(owner)
+                    } else {
+                        true
+                    }
+                })
                 // Map the entities to the correct response
                 .map(|d| Self::map_directory_entity_to_directory_response(d.clone(), &store))
                 .collect();
 
             // Get all child assets (files and directories) for the directory
-            Self::get_assets_recursive(parent_id, &mut directories, &store)
+            Self::get_assets_recursive(parent_id, &mut directories, owner, &store)
         })
     }
 
     fn get_assets_recursive(
         parent_id: Option<Id>,
         directories: &mut Vec<DirectoryResponse>,
+        owner: Option<Principal>,
         store: &Store,
     ) -> Vec<Asset> {
         // Find all directories with the given parent_id
         let mut _directories: Vec<DirectoryResponse> = directories
             .iter()
-            .filter(|d| d.parent_id == parent_id)
+            .filter(|_dir| {
+                if let Some(owner) = owner {
+                    _dir.owner == Some(owner) && _dir.parent_id == parent_id
+                } else {
+                    _dir.parent_id == parent_id
+                }
+            })
             .cloned()
             .collect();
 
@@ -221,14 +238,20 @@ impl Store {
                 .borrow()
                 .files
                 .values()
-                .filter(|f| f.parent_id == parent_id)
+                .filter(|_file| {
+                    if let Some(owner) = owner {
+                        _file.owner == Some(owner) && _file.parent_id == parent_id
+                    } else {
+                        _file.parent_id == parent_id
+                    }
+                })
                 .cloned()
                 .collect()
         });
 
         // Recursively get children of each directory
         for child in &mut _directories {
-            child.children = Self::get_assets_recursive(Some(child.id), directories, store)
+            child.children = Self::get_assets_recursive(Some(child.id), directories, owner, store)
         }
 
         // Convert directories to assets and add them to the assets vec
@@ -272,5 +295,66 @@ impl Store {
                 )))
             });
         assets
+    }
+
+    pub fn change_asset_name(name: String, asset: AssetWithId) -> Result<Asset, String> {
+        match asset {
+            AssetWithId::File(file_id) => match Self::change_file_name(file_id, name) {
+                Ok(file) => Ok(Asset::File(file)),
+                Err(err) => Err(err),
+            },
+            AssetWithId::Directory(directory_id) => {
+                match Self::change_directory_name(directory_id, name) {
+                    Ok(directory) => Ok(Asset::Directory(directory)),
+                    Err(err) => Err(err),
+                }
+            }
+        }
+    }
+
+    pub fn change_asset_permission(
+        permission: Permission,
+        asset: AssetWithId,
+    ) -> Result<Asset, String> {
+        match asset {
+            AssetWithId::File(file_id) => match Self::change_file_permission(file_id, permission) {
+                Ok(file) => Ok(Asset::File(file)),
+                Err(err) => Err(err),
+            },
+            AssetWithId::Directory(directory_id) => {
+                match Self::change_directory_permission(directory_id, permission) {
+                    Ok(directory) => Ok(Asset::Directory(directory)),
+                    Err(err) => Err(err),
+                }
+            }
+        }
+    }
+
+    pub fn change_asset_parent(parent_id: Option<Id>, asset: AssetWithId) -> Result<Asset, String> {
+        match asset {
+            AssetWithId::File(file_id) => match Self::change_file_parent(file_id, parent_id) {
+                Ok(file) => Ok(Asset::File(file)),
+                Err(err) => Err(err),
+            },
+            AssetWithId::Directory(directory_id) => {
+                match Self::change_directory_parent(directory_id, parent_id) {
+                    Ok(directory) => Ok(Asset::Directory(directory)),
+                    Err(err) => Err(err),
+                }
+            }
+        }
+    }
+
+    pub fn delete_asset(asset: AssetWithId) -> Result<(), String> {
+        match asset {
+            AssetWithId::File(file_id) => match Self::delete_file(file_id) {
+                Ok(_) => Ok(()),
+                Err(err) => Err(err),
+            },
+            AssetWithId::Directory(directory_id) => match Self::delete_directory(directory_id) {
+                Ok(_) => Ok(()),
+                Err(err) => Err(err),
+            },
+        }
     }
 }

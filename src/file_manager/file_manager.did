@@ -1,4 +1,5 @@
 type Asset = variant { File : FileResponse; Directory : DirectoryResponse };
+type AssetWithId = variant { File : nat64; Directory : nat64 };
 type DirectoryEntity = record {
   id : nat64;
   permission : Permission;
@@ -81,8 +82,9 @@ type Result = variant {
   Ok : vec record { FileResponse; text };
   Err : record { vec Asset; text };
 };
-type Result_1 = variant { Ok; Err : text };
+type Result_1 = variant { Ok : Asset; Err : text };
 type Result_2 = variant { Ok : DirectoryEntity; Err : text };
+type Result_3 = variant { Ok; Err : text };
 type StreamingCallbackHttpResponse = record {
   token : opt StreamingCallbackToken;
   body : vec nat8;
@@ -181,12 +183,13 @@ type Vec_1 = vec record {
 service : {
   add_assets : (opt nat64, vec NestedAssets) -> (Result);
   add_chunks : (vec record { nat64; vec nat8 }) -> ();
-  change_directory_permission : (nat64, Permission) -> (Result_1);
-  change_file_permission : (nat64, Permission) -> (Result_1);
+  change_asset_name : (text, AssetWithId) -> (Result_1);
+  change_asset_owner : (principal, AssetWithId) -> (Result_1);
+  change_asset_parent : (opt nat64, AssetWithId) -> (Result_1);
+  change_asset_permission : (Permission, AssetWithId) -> (Result_1);
   create_directory : (text, Permission, opt nat64) -> (Result_2);
-  delete_directory : (nat64) -> (Result_1);
-  delete_file : (nat64) -> (Result_1);
-  get_assets_tree : (opt nat64) -> (vec Asset) query;
+  delete_asset : (AssetWithId) -> (Result_3);
+  get_assets_tree : (opt nat64, bool) -> (vec Asset) query;
   get_metadata : () -> (Metadata) query;
   http_request : (HttpRequest) -> (HttpResponse) query;
   http_request_streaming_callback : (StreamingCallbackToken) -> (

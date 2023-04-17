@@ -3,6 +3,8 @@ import type { ActorMethod } from '@dfinity/agent';
 
 export type Asset = { 'File' : FileResponse } |
   { 'Directory' : DirectoryResponse };
+export type AssetWithId = { 'File' : bigint } |
+  { 'Directory' : bigint };
 export interface DirectoryEntity {
   'id' : bigint,
   'permission' : Permission,
@@ -87,9 +89,11 @@ export interface PostFile {
 }
 export type Result = { 'Ok' : Array<[FileResponse, string]> } |
   { 'Err' : [Array<Asset>, string] };
-export type Result_1 = { 'Ok' : null } |
+export type Result_1 = { 'Ok' : Asset } |
   { 'Err' : string };
 export type Result_2 = { 'Ok' : DirectoryEntity } |
+  { 'Err' : string };
+export type Result_3 = { 'Ok' : null } |
   { 'Err' : string };
 export interface StreamingCallbackHttpResponse {
   'token' : [] | [StreamingCallbackToken],
@@ -216,15 +220,16 @@ export interface _SERVICE {
     [Array<[bigint, Uint8Array | number[]]>],
     undefined
   >,
-  'change_directory_permission' : ActorMethod<[bigint, Permission], Result_1>,
-  'change_file_permission' : ActorMethod<[bigint, Permission], Result_1>,
+  'change_asset_name' : ActorMethod<[string, AssetWithId], Result_1>,
+  'change_asset_owner' : ActorMethod<[Principal, AssetWithId], Result_1>,
+  'change_asset_parent' : ActorMethod<[[] | [bigint], AssetWithId], Result_1>,
+  'change_asset_permission' : ActorMethod<[Permission, AssetWithId], Result_1>,
   'create_directory' : ActorMethod<
     [string, Permission, [] | [bigint]],
     Result_2
   >,
-  'delete_directory' : ActorMethod<[bigint], Result_1>,
-  'delete_file' : ActorMethod<[bigint], Result_1>,
-  'get_assets_tree' : ActorMethod<[[] | [bigint]], Array<Asset>>,
+  'delete_asset' : ActorMethod<[AssetWithId], Result_3>,
+  'get_assets_tree' : ActorMethod<[[] | [bigint], boolean], Array<Asset>>,
   'get_metadata' : ActorMethod<[], Metadata>,
   'http_request' : ActorMethod<[HttpRequest], HttpResponse>,
   'http_request_streaming_callback' : ActorMethod<
