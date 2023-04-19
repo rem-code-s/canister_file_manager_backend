@@ -179,7 +179,8 @@ impl Store {
 
                         ASSET_HASHES.with(|hashes| {
                             let mut hashes = hashes.borrow_mut();
-                            hashes.insert(&updated_file);
+                            ic_cdk::println!("test");
+                            hashes.insert(&updated_file, &store);
                             Store::update_certified_data(&hashes);
                         });
                         store.files.insert(_file.id, updated_file);

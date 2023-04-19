@@ -157,7 +157,7 @@ impl Store {
                 let cert_header = ASSET_HASHES.with(|hashes| {
                     Self::build_asset_certificate_header(
                         &hashes.borrow(),
-                        format!("/{}", _file.name),
+                        format!("/{}", Store::get_file_path(&_file, &store)),
                     )
                 });
 

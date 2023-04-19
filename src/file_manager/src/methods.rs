@@ -24,7 +24,7 @@ fn pre_upgrade() {
 #[post_upgrade]
 fn post_upgrade() {
     let (old_store,): (Store,) = storage::stable_restore().unwrap();
-    let asset_hashes = AssetHashes::from(&old_store.files);
+    let asset_hashes = AssetHashes::from(&old_store);
     ASSET_HASHES.with(|assets| *assets.borrow_mut() = asset_hashes.clone());
     STORE.with(|s| *s.borrow_mut() = old_store);
 
