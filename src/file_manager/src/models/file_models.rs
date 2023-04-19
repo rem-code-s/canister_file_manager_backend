@@ -1,4 +1,5 @@
 use candid::{CandidType, Deserialize, Principal};
+use ic_certified_map::Hash;
 use serde::Serialize;
 
 use super::asset_models::{Id, Manifest, Permission};
@@ -18,6 +19,7 @@ pub struct FileEntity {
     pub owner: Option<Principal>,
     pub created_at: u64,
     pub updated_at: u64,
+    pub hash: Hash,
 }
 
 #[derive(Clone, Debug, Default, CandidType, Serialize, Deserialize)]

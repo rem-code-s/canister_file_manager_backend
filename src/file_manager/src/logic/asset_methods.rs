@@ -1,5 +1,6 @@
 use candid::Principal;
 use ic_cdk::{api::time, caller};
+use ic_certified_map::Hash;
 
 use crate::{
     models::{
@@ -123,12 +124,12 @@ impl Store {
                         updated_at: time(),
                         is_protected,
                         owner: Some(caller()),
+                        hash: Hash::default(),
                     };
 
                     // Reserve the chunk ids for the file
                     for _ in 0..post_file.chunk_count {
                         let chunk_id = store.chunk_id;
-                        store.chunks.insert(chunk_id, vec![]);
                         file.chunks.push(chunk_id);
                         store.chunk_id += 1;
                     }

@@ -1,12 +1,13 @@
 use candid::Principal;
 use ic_cdk::{api::time, caller};
+use sha2::{Digest, Sha256};
 
 use crate::{
     models::{
         asset_models::{Id, Permission},
         file_models::{FileEntity, FileResponse},
     },
-    store::{Store, STORE},
+    store::{Store, ASSET_HASHES, STORE},
 };
 
 impl Store {
@@ -148,8 +149,41 @@ impl Store {
             let mut store = store.borrow_mut();
             for (chunk_id, bytes) in chunks {
                 // Only let the owner of the file upload the corresponding chunk
-                if let Some(_file) = store.files.iter().find(|f| f.1.chunks.contains(&chunk_id)) {
+                if let Some((_, _file)) = store
+                    .files
+                    .clone()
+                    .iter()
+                    .find(|f| f.1.chunks.contains(&chunk_id))
+                {
                     store.chunks.insert(chunk_id, bytes);
+
+                    // if all chunks are uploaded
+                    if _file
+                        .clone()
+                        .chunks
+                        .iter()
+                        .all(|id| store.chunks.contains_key(id))
+                    {
+                        let mut hasher = Sha256::new();
+
+                        for chunk_id in _file.chunks.iter() {
+                            let chunk = store.chunks.get(chunk_id);
+                            if let Some(chunk) = chunk {
+                                hasher.update(chunk);
+                            }
+                        }
+                        let hash = hasher.finalize().into();
+
+                        let mut updated_file = _file.clone();
+                        updated_file.hash = hash;
+
+                        ASSET_HASHES.with(|hashes| {
+                            let mut hashes = hashes.borrow_mut();
+                            hashes.insert(&updated_file);
+                            Store::update_certified_data(&hashes);
+                        });
+                        store.files.insert(_file.id, updated_file);
+                    }
                 }
             }
         });
