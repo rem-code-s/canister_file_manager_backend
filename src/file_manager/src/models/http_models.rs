@@ -1,4 +1,5 @@
 use candid::{CandidType, Deserialize, Func};
+use ic_certified_map::Hash;
 
 #[derive(CandidType, Deserialize, Clone)]
 pub struct HeaderField(pub String, pub String);
@@ -32,6 +33,7 @@ pub struct StreamingCallbackToken {
     pub file_id: u64,
     pub headers: Vec<HeaderField>,
     pub chunk_index: usize,
+    pub hash: Hash,
 }
 
 #[derive(CandidType, Deserialize, Clone)]
@@ -43,7 +45,8 @@ pub struct StreamingCallbackHttpResponse {
 #[derive(CandidType, Deserialize, Clone)]
 pub struct AssetEncoding {
     pub content_chunks: Vec<u64>,
-    pub total_length: u128,
+    pub bytes_length: u128,
+    pub hash: Hash,
 }
 
 #[derive(Clone, CandidType, Deserialize)]

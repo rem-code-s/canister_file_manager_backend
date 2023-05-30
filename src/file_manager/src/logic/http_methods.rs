@@ -1,4 +1,10 @@
-use ic_cdk::id;
+use ic_cdk::{
+    api::{data_certificate, set_certified_data},
+    id,
+};
+use ic_certified_map::{labeled, labeled_hash, AsHashTree};
+use serde::Serialize;
+use serde_cbor::Serializer;
 
 use crate::{
     helpers::ic_data_helper,
@@ -8,9 +14,9 @@ use crate::{
             AssetEncoding, HeaderField, HttpRequest, HttpResponse, PathEntry,
             StreamingCallbackToken, StreamingStrategy,
         },
-        misc_models::Metadata,
+        misc_models::{AssetHashes, Metadata},
     },
-    store::{Store, STORE},
+    store::{Store, ASSET_HASHES, STORE},
 };
 
 impl Store {
@@ -97,6 +103,7 @@ impl Store {
             file_id: file_id.clone(),
             headers: headers.to_owned(),
             chunk_index: chunk_index + 1,
+            hash: encoding.hash.clone(),
         })
     }
 
@@ -141,19 +148,27 @@ impl Store {
             Some(_file) => STORE.with(|store| {
                 let store = store.borrow();
 
-                let headers = vec![
+                let mut headers = vec![
                     HeaderField("content-type".to_string(), _file.mime_type.to_string()),
                     HeaderField("accept-ranges".to_string(), "bytes".to_string()),
                     HeaderField("content-length".to_string(), _file.size.to_string()),
-                    // HeaderField(
-                    //     "access-control-allow-origin".to_string(),
-                    //     format!("https://{}.raw.ic0.app", id().to_string()),
-                    // ),
                 ];
+
+                let cert_header = ASSET_HASHES.with(|hashes| {
+                    Self::build_asset_certificate_header(
+                        &hashes.borrow(),
+                        format!("/{}", Store::get_file_path(&_file, &store)),
+                    )
+                });
+
+                if let Ok(_header) = cert_header {
+                    headers.push(_header);
+                }
 
                 let encoding = AssetEncoding {
                     content_chunks: _file.chunks.clone(),
-                    total_length: _file.size as u128,
+                    bytes_length: _file.size as u128,
+                    hash: _file.hash.clone(),
                 };
 
                 let body = store.chunks.get(&_file.chunks[0]).unwrap().clone();
@@ -222,5 +237,49 @@ impl Store {
 
         let dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
         write(dir.join(format!("file_manager.did")), candid).expect("Write failed.");
+    }
+
+    pub fn build_asset_certificate_header(
+        asset_hashes: &AssetHashes,
+        path: String,
+    ) -> Result<HeaderField, &'static str> {
+        let certificate = data_certificate();
+
+        match certificate {
+            None => Err("No certificate found."),
+            Some(certificate) => {
+                Self::build_asset_certificate_header_impl(&certificate, asset_hashes, &path)
+            }
+        }
+    }
+
+    fn build_asset_certificate_header_impl(
+        certificate: &Vec<u8>,
+        asset_hashes: &AssetHashes,
+        path: &String,
+    ) -> Result<HeaderField, &'static str> {
+        let witness = asset_hashes.tree.witness(path.as_bytes());
+        let tree = labeled(b"http_assets", witness);
+
+        let mut serializer = Serializer::new(vec![]);
+        serializer.self_describe().unwrap();
+        let result = tree.serialize(&mut serializer);
+
+        match result {
+            Err(_err) => Err("Failed to serialize a hash tree."),
+            Ok(_serialize) => Ok(HeaderField(
+                "IC-Certificate".to_string(),
+                format!(
+                    "certificate=:{}:, tree=:{}:",
+                    base64::encode(&certificate),
+                    base64::encode(&serializer.into_inner())
+                ),
+            )),
+        }
+    }
+
+    pub fn update_certified_data(asset_hashes: &AssetHashes) {
+        let prefixed_root_hash = &labeled_hash(b"http_assets", &asset_hashes.tree.root_hash());
+        set_certified_data(&prefixed_root_hash[..]);
     }
 }

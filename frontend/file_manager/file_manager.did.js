@@ -212,6 +212,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const StreamingCallbackToken = IDL.Record({
     'chunk_index' : IDL.Nat64,
+    'hash' : IDL.Vec(IDL.Nat8),
     'headers' : IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text)),
     'file_id' : IDL.Nat64,
   });

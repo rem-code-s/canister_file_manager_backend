@@ -101,6 +101,7 @@ export interface StreamingCallbackHttpResponse {
 }
 export interface StreamingCallbackToken {
   'chunk_index' : bigint,
+  'hash' : Uint8Array | number[],
   'headers' : Array<[string, string]>,
   'file_id' : bigint,
 }

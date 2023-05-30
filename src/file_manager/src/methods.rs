@@ -11,9 +11,9 @@ use crate::{
             AssetEncoding, HttpRequest, HttpResponse, StreamingCallbackHttpResponse,
             StreamingCallbackToken,
         },
-        misc_models::Metadata,
+        misc_models::{AssetHashes, Metadata},
     },
-    store::{Store, STORE},
+    store::{Store, ASSET_HASHES, STORE},
 };
 
 #[pre_upgrade]
@@ -24,7 +24,11 @@ fn pre_upgrade() {
 #[post_upgrade]
 fn post_upgrade() {
     let (old_store,): (Store,) = storage::stable_restore().unwrap();
+    let asset_hashes = AssetHashes::from(&old_store);
+    ASSET_HASHES.with(|assets| *assets.borrow_mut() = asset_hashes.clone());
     STORE.with(|s| *s.borrow_mut() = old_store);
+
+    Store::update_certified_data(&asset_hashes);
 }
 
 #[test]
@@ -119,7 +123,8 @@ fn http_request_streaming_callback(data: StreamingCallbackToken) -> StreamingCal
             Some(_file) => {
                 let encoding = AssetEncoding {
                     content_chunks: _file.chunks.clone(),
-                    total_length: _file.size as u128,
+                    bytes_length: _file.size as u128,
+                    hash: _file.hash.clone(),
                 };
 
                 let body = store

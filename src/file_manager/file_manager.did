@@ -91,6 +91,7 @@ type StreamingCallbackHttpResponse = record {
 };
 type StreamingCallbackToken = record {
   chunk_index : nat64;
+  hash : vec nat8;
   headers : vec record { text; text };
   file_id : nat64;
 };
